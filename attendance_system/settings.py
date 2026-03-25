@@ -1,11 +1,6 @@
-"""
-Django settings for attendance_system project.
-"""
-
 from pathlib import Path
-import os   # ✅ IMPORTANT
+import os
 
-# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -13,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-deh$i_-w-vlfu8x6xvs=up(yytc-$m0zgzpj^a_lr-)ob3k9+i"
 DEBUG = True
 ALLOWED_HOSTS = ['*']
+
 
 # INSTALLED APPS
 INSTALLED_APPS = [
@@ -26,9 +22,10 @@ INSTALLED_APPS = [
 ]
 
 
-# MIDDLEWARE
+# ✅ MIDDLEWARE (ADD WHITENOISE HERE)
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # 🔥 ADD THIS
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -46,7 +43,7 @@ ROOT_URLCONF = "attendance_system.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],  # you can add custom template folder later
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -88,12 +85,17 @@ USE_I18N = True
 USE_TZ = True
 
 
-# ✅ STATIC FILES (🔥 MOST IMPORTANT PART)
-STATIC_URL = '/static/'   # FIXED
+# ✅ STATIC FILES (FINAL FIX 🔥)
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'students/static')   # tells Django where your images are
+    os.path.join(BASE_DIR, 'students/static'),
 ]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')   # 🔥 ADD THIS
+
+# WhiteNoise storage
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # LOGIN REDIRECT
