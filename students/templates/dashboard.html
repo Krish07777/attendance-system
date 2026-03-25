@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4" data-aos="fade-down">📊 Dashboard</h2>
+
+<div class="row">
+
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow">
+            <h5>Total Students</h5>
+            <h2>{{ total_students }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow bg-success text-white">
+            <h5>Present Today</h5>
+            <h2>{{ present_today }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow bg-danger text-white">
+            <h5>Absent Today</h5>
+            <h2>{{ absent_today }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow bg-info text-white">
+            <h5>Attendance %</h5>
+            <h2>{{ percentage }}%</h2>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart Section -->
+<div class="mt-5 d-flex justify-content-center">
+    <div style="width: 350px; height: 350px;">
+        <canvas id="chart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('chart');
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [{{ present_today }}, {{ absent_today }}],
+                backgroundColor: ['#28a745', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}
