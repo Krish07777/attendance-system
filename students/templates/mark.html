@@ -7,8 +7,15 @@
 <form method="post" class="card p-4 shadow">
     {% csrf_token %}
 
-    <table class="table">
-        <thead>
+    <!-- 📅 DATE -->
+    <div class="mb-3">
+        <label class="form-label">Select Date</label>
+        <input type="date" name="date" class="form-control"
+               value="{{ selected_date|date:'Y-m-d' }}">
+    </div>
+
+    <table class="table table-bordered text-center">
+        <thead class="table-dark">
             <tr>
                 <th>Student Name</th>
                 <th>Present</th>
@@ -20,14 +27,38 @@
             <tr>
                 <td>{{ student.name }}</td>
                 <td>
-                    <input type="checkbox" name="{{ student.id }}">
+                    <!-- ✅ FIXED NAME -->
+                    <input type="checkbox"
+                           name="student_{{ student.id }}"
+                           class="form-check-input">
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <button class="btn btn-primary">Submit Attendance</button>
+    <!-- BUTTONS -->
+    <div class="d-flex justify-content-between mt-3">
+
+        <!-- Select All -->
+        <button type="button" class="btn btn-success" onclick="selectAll()">
+            ✔ Mark All Present
+        </button>
+
+        <!-- Submit -->
+        <button class="btn btn-primary">
+            💾 Submit Attendance
+        </button>
+    </div>
+
 </form>
+
+<!-- 🔥 SCRIPT -->
+<script>
+function selectAll() {
+    document.querySelectorAll("input[type='checkbox']")
+        .forEach(cb => cb.checked = true);
+}
+</script>
 
 {% endblock %}

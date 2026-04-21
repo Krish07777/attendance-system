@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import Student, Attendance
-from datetime import date
+from datetime import date, datetime
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -13,19 +13,16 @@ def register(request):
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
 
-        # ✅ Check passwords match
         if password != confirm_password:
             return render(request, 'register.html', {
                 'error': 'Passwords do not match'
             })
 
-        # ✅ Check user exists
         if User.objects.filter(username=username).exists():
             return render(request, 'register.html', {
                 'error': 'User already exists'
             })
 
-        # ✅ Create user
         User.objects.create_user(username=username, password=password)
         return redirect('login')
 
@@ -60,10 +57,20 @@ def user_logout(request):
 # 📊 DASHBOARD
 @login_required
 def dashboard(request):
-    today = date.today()
+    selected_date = request.GET.get('date')
 
-    total_students = Student.objects.count()
-    present_today = Attendance.objects.filter(date=today, status=True).count()
+    if selected_date:
+        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    else:
+        selected_date = date.today()
+
+    students = Student.objects.all()
+    total_students = students.count()
+
+    records = Attendance.objects.filter(date=selected_date)
+
+    # ✅ avoid duplicate counting
+    present_today = records.filter(status=True).values('student').distinct().count()
     absent_today = total_students - present_today
 
     percentage = (present_today / total_students * 100) if total_students else 0
@@ -72,28 +79,46 @@ def dashboard(request):
         'total_students': total_students,
         'present_today': present_today,
         'absent_today': absent_today,
-        'percentage': percentage
+        'percentage': round(percentage, 2),
+        'selected_date': selected_date
     })
 
 
 # 📅 MARK ATTENDANCE
+from datetime import date, datetime  # ✅ FIXED import
+
 @login_required
 def mark_attendance(request):
-    students = Student.objects.all()
+    students = Student.objects.all().order_by('id')  # optional but cleaner
 
     if request.method == "POST":
-        for student in students:
-            status = request.POST.get(str(student.id)) == "on"
+        selected_date = request.POST.get('date')
 
-            Attendance.objects.create(
+        # ✅ Safe date handling
+        try:
+            if selected_date:
+                selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+            else:
+                selected_date = date.today()
+        except ValueError:
+            selected_date = date.today()
+
+        for student in students:
+            # ✅ checkbox fix
+            status = request.POST.get(f"student_{student.id}") == "on"
+
+            Attendance.objects.update_or_create(
                 student=student,
-                date=date.today(),
-                status=status
+                date=selected_date,
+                defaults={'status': status}
             )
 
         return redirect('view_attendance')
 
-    return render(request, 'mark.html', {'students': students})
+    return render(request, 'mark.html', {
+        'students': students,
+        'selected_date': date.today()
+    })
 
 
 # 📊 VIEW ATTENDANCE (WITH FILTER)
@@ -103,6 +128,9 @@ def view_attendance(request):
     data = []
 
     selected_date = request.GET.get('date')
+
+    if selected_date:
+        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
 
     for student in students:
         records = Attendance.objects.filter(student=student)
@@ -117,7 +145,7 @@ def view_attendance(request):
 
         data.append({
             'name': student.name,
-            'percentage': percentage
+            'percentage': round(percentage, 2)
         })
 
     return render(request, 'view.html', {

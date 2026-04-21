@@ -2,67 +2,114 @@
 
 {% block content %}
 
-<h2 class="mb-4" data-aos="fade-down">📊 Dashboard</h2>
+<h2 class="mb-4 fw-bold text-dark" data-aos="fade-down">📊 Dashboard</h2>
 
-<div class="row">
+<!-- 🔍 Date Filter -->
+<form method="GET" class="row g-3 mb-4 align-items-end">
 
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Select Date</label>
+        <input type="date" name="date" class="form-control"
+               value="{{ selected_date|date:'Y-m-d'|default:'' }}">
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+            Filter
+        </button>
+    </div>
+
+    <div class="col-md-2">
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary w-100">
+            Reset
+        </a>
+    </div>
+
+</form>
+
+<!-- 📊 Cards -->
+<div class="row g-4">
+
+    <!-- Total Students -->
     <div class="col-md-3">
-        <div class="card text-center p-3 shadow">
-            <h5>Total Students</h5>
-            <h2>{{ total_students }}</h2>
+        <div class="card text-center p-4 shadow-sm border-0">
+            <h6 class="text-muted">Total Students</h6>
+            <h2 class="fw-bold">{{ total_students|default:0 }}</h2>
         </div>
     </div>
 
+    <!-- Present -->
     <div class="col-md-3">
-        <div class="card text-center p-3 shadow bg-success text-white">
-            <h5>Present Today</h5>
-            <h2>{{ present_today }}</h2>
+        <div class="card text-center p-4 shadow-sm border-0 bg-success text-white">
+            <h6>Present</h6>
+            <h2 class="fw-bold">{{ present_today|default:0 }}</h2>
         </div>
     </div>
 
+    <!-- Absent -->
     <div class="col-md-3">
-        <div class="card text-center p-3 shadow bg-danger text-white">
-            <h5>Absent Today</h5>
-            <h2>{{ absent_today }}</h2>
+        <div class="card text-center p-4 shadow-sm border-0 bg-danger text-white">
+            <h6>Absent</h6>
+            <h2 class="fw-bold">{{ absent_today|default:0 }}</h2>
         </div>
     </div>
 
+    <!-- Percentage -->
     <div class="col-md-3">
-        <div class="card text-center p-3 shadow bg-info text-white">
-            <h5>Attendance %</h5>
-            <h2>{{ percentage }}%</h2>
+        <div class="card text-center p-4 shadow-sm border-0 bg-info text-white">
+            <h6>Attendance %</h6>
+            <h2 class="fw-bold">
+                {{ percentage|default:0|floatformat:2 }}%
+            </h2>
         </div>
     </div>
 
 </div>
 
-<!-- Chart Section -->
+<!-- 📅 Selected Date Display -->
+<div class="text-center mt-4">
+    <span class="badge bg-dark p-2">
+        {% if selected_date %}
+            Showing data for: {{ selected_date|date:"d M Y" }}
+        {% else %}
+            Showing data for: Today
+        {% endif %}
+    </span>
+</div>
+
+<!-- 📈 Chart -->
 <div class="mt-5 d-flex justify-content-center">
-    <div style="width: 350px; height: 350px;">
+    <div class="card shadow-sm p-4 border-0" style="width: 420px;">
+        <h5 class="text-center mb-3">Attendance Overview</h5>
         <canvas id="chart"></canvas>
     </div>
 </div>
 
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
     const ctx = document.getElementById('chart');
 
+    const present = {{ present_today|default:0 }};
+    const absent = {{ absent_today|default:0 }};
+
     new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: ['Present', 'Absent'],
             datasets: [{
-                data: [{{ present_today }}, {{ absent_today }}],
-                backgroundColor: ['#28a745', '#dc3545']
+                data: [present, absent],
+                backgroundColor: ['#28a745', '#dc3545'],
+                borderWidth: 0
             }]
         },
         options: {
+            cutout: '65%',
             responsive: true,
-            maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'top'
+                    position: 'bottom'
                 }
             }
         }
